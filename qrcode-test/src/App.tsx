@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { BrowserQRCodeReader, QRCodeReader } from '@zxing/library';
-import { Button } from 'antd'
+import { BrowserQRCodeReader } from '@zxing/library';
+import { Button, message, Modal } from 'antd';
 
-function App() {
+const { info } = Modal;
+
+const App: React.FC = () => {
+  const [scanVisable, setScanVisable] = useState<boolean>(false);
   const [reader, setReader] = useState();
   const [deviceID, setDeviceID] = useState();
 
-  const [message, setMessage] = useState();
+  const [err, setErr] = useState();
   const [result, setResult] = useState();
 
   const initReader = useCallback(() => {
@@ -39,32 +42,41 @@ function App() {
   }, [initReader, reader]);
 
   const decode = (codeReader: any, selectedDeviceId: any) => {
-    codeReader
-      .decodeFromInputVideoDevice(selectedDeviceId, 'video')
-      .then((result: any) => {
-        //console.log(result);
+    const a = codeReader.decodeFromInputVideoDevice(selectedDeviceId, 'video');
+    info({
+      content: <video id='video' width='100%' height='100%' style={{}} />,
+      mask: true,
+      icon: null,
+      okText: '关闭',
+      okType: 'default',
+      onOk: () => {
+        codeReader.reset();
+      },
+    });
+    a.then((result: any) => {
+      if (result) {
+        message.success('扫码成功');
         setResult(result.text);
-      })
-      .catch((err: any) => {
-        setMessage(err.toString());
-      });
+        codeReader.reset();
+        Modal.destroyAll()
+      }
+    }).catch((err: any) => {
+      setErr(err.toString());
+    });
   };
-
   return (
     <div className='App'>
       <div className='container' style={{ textAlign: 'center', width: '100%' }}>
         <div>
-          
-          <video id='video' width='200' height='200' style={{ border: '1px solid gray', margin: '30px' }} />
           <Button style={{ margin: '30px' }} size='large' color='primary' onClick={() => decode(reader, deviceID)}>
             扫一扫
           </Button>
         </div>
       </div>
       <div>{result}</div>
-      <div>{message}</div>
+      <div>{err}</div>
     </div>
   );
-}
+};
 
 export default App;
