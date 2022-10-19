@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { BrowserQRCodeReader } from '@zxing/library';
 import { Button, message, Modal } from 'antd';
+import Vconsole from 'vconsole';
 
 const { info } = Modal;
+const vconsole = new Vconsole();
 
 const App: React.FC = () => {
   const [scanVisable, setScanVisable] = useState<boolean>(false);
@@ -21,10 +23,25 @@ const App: React.FC = () => {
         if (videoInputDevices.length <= 0) {
           throw Error('妹找到摄像头啊');
         }
-        return {
-          videoDeviceID: videoInputDevices[0].deviceId,
-          codeReader,
-        };
+        console.log(videoInputDevices);
+        const userAgent = navigator.userAgent.toLowerCase();
+
+        if (userAgent.includes('android')) {
+          return {
+            videoDeviceID: videoInputDevices[1].deviceId,
+            codeReader,
+          };
+        } else if (userAgent.includes('iphone')) {
+          return {
+            videoDeviceID: videoInputDevices[0].deviceId,
+            codeReader,
+          };
+        } else {
+          return {
+            videoDeviceID: videoInputDevices[0].deviceId,
+            codeReader,
+          };
+        }
       })
       .catch((err) => {
         console.log(err);
@@ -58,7 +75,7 @@ const App: React.FC = () => {
         message.success('扫码成功');
         setResult(result.text);
         codeReader.reset();
-        Modal.destroyAll()
+        Modal.destroyAll();
       }
     }).catch((err: any) => {
       setErr(err.toString());
